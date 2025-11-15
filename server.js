@@ -1,34 +1,21 @@
-// server.js
-const WebSocket = require('ws');
+// server.js — WebSocket chat server
+const http = require('http');
+const express = require('express');
+const { Server } = require('ws');
 
-// Use platform port if provided
-const port = process.env.PORT || 8080;
-const wss = new WebSocket.Server({ port });
+const app = express();
+const server = http.createServer(app);
+const wss = new Server({ server });
 
-let scene = { nodes: [] };
-let chat = [];
+app.get('/', (_req, res) => res.send('WS chat server is running'));
 
-wss.on('connection', (ws) => {
-  ws.send(JSON.stringify({ type: 'scene_snapshot', scene }));
-  ws.send(JSON.stringify({ type: 'chat_snapshot', chat }));
-
-  ws.on('message', (raw) => {
-    let msg; try { msg = JSON.parse(raw); } catch { return; }
-    if (msg.type === 'scene_update') {
-      scene = msg.scene;
-      broadcast({ type: 'scene_update', scene });
-    }
-    if (msg.type === 'chat') {
-      const entry = { user: msg.user || 'guest', text: msg.text, ts: Date.now() };
-      chat.push(entry);
-      broadcast({ type: 'chat', entry });
+wss.on('connection', socket => {
+  socket.on('message', msg => {
+    for (const client of wss.clients) {
+      if (client.readyState === client.OPEN) client.send(msg.toString());
     }
   });
 });
 
-function broadcast(msg) {
-  const data = JSON.stringify(msg);
-  wss.clients.forEach(c => { if (c.readyState === 1) c.send(data); });
-}
-
-console.log('Server running, port:', port);
+const PORT = process.env.PORT || 8181;
+server.listen(PORT, () => console.log(`Listening on ${PORT}`));
