@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <input id="name" placeholder="Name">
+  <input id="msg" placeholder="Message">
+  <button id="send">Send</button>
+  <div id="chat"></div>
+  <script>
+    // Temporarily empty; we’ll set the URL after deployment
+    const chat = document.getElementById('chat');
+    const name = document.getElementById('name');
+    const msg = document.getElementById('msg');
+    document.getElementById('send').onclick = () => ws.send(`${name.value||'Anon'}: ${msg.value}`);
+    let ws; // we’ll assign after deploy
+  </script>
+</body>
+</html>
